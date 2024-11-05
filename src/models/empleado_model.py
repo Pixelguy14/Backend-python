@@ -1,5 +1,6 @@
 class Empleado:
-    def __init__(self, nombre, apaterno, amaterno, direccion, telefono, ciudad, estado, usuario, password, rol):
+    def __init__(self, id = None, nombre = '', apaterno= '', amaterno= '', direccion= '', telefono= '', ciudad= '', estado= '', usuario= '', password= '', rol= ''):
+        self.id = id
         self.nombre = nombre
         self.apaterno = apaterno
         self.amaterno = amaterno
@@ -10,3 +11,10 @@ class Empleado:
         self.usuario = usuario
         self.password = password
         self.rol = rol
+
+    def to_dict(self):
+        return self.__dict__
+
+    @staticmethod
+    def from_dict(data):
+        return Empleado(**data)

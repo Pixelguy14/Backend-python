@@ -1,33 +1,34 @@
 # port Empleado from empleado_model
-import firebase_admin
-from firebase_admin import credentials, firestore
-coll = 'empleados_python'
+from config.firebase_config import intialize_firebase
 from models.empleado_model import Empleado
 
-cred = credentials.Certificate("RUTA_A_NUESTRO_ARCHIVO_FIREBASE")
-firebase_admin.initialize_app(cred)
-db = firestore.client()
-collection = 'empleados_python'
-
 class EmpleadoRepository:
-    @staticmethod
-    def get_all():
-        empleados = db.collection(coll)
-        return [doc.to_dict() for doc in empleados.stream()]
-    '''
-    @staticmethod
-    def get_by_id(empleado_id):
-        empleados = db.collection(coll)
-        return [doc.to_dict() for doc in empleados.stream()]
-    '''
-    @staticmethod
-    def create_empleado(data):
-        db.collection(coll).add(data)
+    def __init__(self):
+        self.db = intialize_firebase()
+        self.collection = self.db.collection('empleados_python')
 
-    @staticmethod
-    def get_by_user(username):
-        docs = db.collection(coll).where("usuario","==",username).stream()
+    def get_all(self):
+        empleados = [Empleado.from_dict(doc.to_dict()) for doc in self.collection.stream()]
+        return empleados
+
+    def create_empleado(self, empleado_nuevo):
+        doc = self.collection.document()
+        doc.set(empleado_nuevo.to_dict())
+        return doc.id
+
+    def get_by_user(self, username):
+        docs = self. collection.where ("usuario","==",username).stream()
         for doc in docs:
             # retornamos un valor solo si encontramos un empleado con ese usuario
             return Empleado.from_dict(doc.to_dict())
         return None
+    
+    def get_by_id(self, id):
+        doc = self.collection.document(id).get()
+        return Empleado.from_dict(doc.to_dict()) if doc.exists else None 
+    
+    def update_empleado(self, id, data):
+        self.collection.document(id).update(data)
+
+    def delete_empleado(self, id):
+        self.collection.document(id).delete()

@@ -1,26 +1,34 @@
+import bcrypt
 from repositories.empleado_repository import EmpleadoRepository
-from utils.encryption_util import encrypt_password
-from utils.token_util import generate_token
-import time 
+from models.empleado_model import Empleado
 
 class EmpleadoService:
-    @staticmethod
-    def get_all():
-        return EmpleadoRepository.get_all()
+    def __init__(self):
+        self.repository = EmpleadoRepository()
+    def get_all(self):
+        return self.repository.get_all()
     
-    @staticmethod
-    def get_by_id(empleado_id):
-        return EmpleadoRepository.get_by_id(empleado_id)
+    def create_empleado(self, data):
+        if self.repository.get_by_user(data['usuario']):
+            raise ValueError('El usuario ya existe')
+        
+        hashed = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
+        data['password'] = hashed.decode('utf-8')
+
+        empleadoNuevo = Empleado(**data)
+        return self.repository.create_empleado(empleadoNuevo)
     
-    @staticmethod
-    def create_empleado(data):
-        if EmpleadoRepository.get_by_user(data['usuario']):
-            return {"error": "El Usuario ya Existe"}
-        data['password'] = encrypt_password(data['password'])
-        EmpleadoRepository.create_empleado(data)
-        # Creamos el token despues de que se creo el usuario
-        token = generate_token(data['usuario'])
-        return {
-            "message": "Empleado Registrado",
-            "token": token
-        }
+    def get_by_id(self, id):
+        return self.repository.get_by_id(id)
+    
+    def get_by_user(self, username):
+        return self.repository.get_by_user(username)
+
+    def delete_empleado(self, id):
+        return self.repository.delete_empleado(id)   
+    
+    def update_empleado(self, id, data):
+        if 'password' in data:
+            hashed = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
+            data['password'] = hashed.decode('utf-8')
+        self.repository.update_empleado(id, data)
